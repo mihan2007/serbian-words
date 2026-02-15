@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сербско-русский словарь</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #334155;
+        }
+
+        header {
+            width: 100%;
+            padding: 1.2rem 1rem;
+            text-align: center;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .progress {
+            margin-top: 0.4rem;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .progress-bar {
+            margin-top: 0.5rem;
+            width: 80%;
+            max-width: 300px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin-left: auto;
+            margin-right: auto;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: #6366f1;
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .card-container {
+            width: 100%;
+            perspective: 1000px;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            width: 100%;
+            min-height: 260px;
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 16px;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-front {
+            background: #ffffff;
+        }
+
+        .card-back {
+            background: #6366f1;
+            color: #ffffff;
+            transform: rotateY(180deg);
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.75rem;
+            opacity: 0.6;
+            font-weight: 600;
+        }
+
+        .card-front .card-label {
+            color: #6366f1;
+        }
+
+        .card-word {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .card-hint {
+            margin-top: 1.2rem;
+            font-size: 0.8rem;
+            opacity: 0.45;
+        }
+
+        .card-front .card-example-front {
+            font-size: 0.9rem;
+            text-align: center;
+            color: #64748b;
+            line-height: 1.5;
+            font-style: italic;
+            margin-top: 1rem;
+        }
+
+        .card-back .card-translation {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-back .card-example {
+            font-size: 0.95rem;
+            text-align: center;
+            opacity: 0.85;
+            line-height: 1.5;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-flip {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .btn-next {
+            background: #6366f1;
+            color: #ffffff;
+            box-shadow: 0 2px 12px rgba(99, 102, 241, 0.35);
+        }
+
+        .btn-next:active {
+            box-shadow: 0 1px 6px rgba(99, 102, 241, 0.25);
+        }
+
+        footer {
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        /* Swipe hint animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 0.45; }
+            50% { opacity: 0.7; }
+        }
+
+        .card-hint {
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        /* Desktop hover */
+        @media (hover: hover) {
+            .btn:hover {
+                transform: translateY(-1px);
+            }
+            .btn-next:hover {
+                box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            }
+            .card:hover {
+                box-shadow: 0 6px 28px rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        /* Larger screens */
+        @media (min-width: 600px) {
+            .card {
+                min-height: 300px;
+            }
+            .card-word {
+                font-size: 2.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🇷🇸 Сербско-русский словарь</h1>
+    <div class="progress">Просмотрено: <span id="seen">0</span> из <span id="total">0</span></div>
+    <div class="progress-bar">
+        <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+    </div>
+</header>
+
+<main>
+    <div class="card-container">
+        <div class="card" id="card" onclick="flipCard()">
+            <div class="card-face card-front">
+				<div class="card-label" id="labelFront">Српски</div>
+                <div class="card-word" id="wordFront"></div>
+                <div class="card-example-front" id="exampleFront"></div>
+                <div class="card-hint">нажмите, чтобы перевернуть</div>
+            </div>
+            <div class="card-face card-back">
+                <div class="card-label" id="labelBack">Русский</div>
+                <div class="card-translation" id="wordBack"></div>
+                <div class="card-example" id="example"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-flip" onclick="flipCard()">Перевернуть</button>
+        <button class="btn btn-next" onclick="nextWord()">Следующее →</button>
+    </div>
+</main>
+
+<footer>Фаза 1 — MVP</footer>
+
+<script src="words.js"></script>
+<script>
+    const words = WORDS_DATA.vocabulary;
+    let seenSet = new Set();
+    let currentIndex = -1;
+
+    const cardEl = document.getElementById('card');
+    const labelFrontEl = document.getElementById('labelFront');
+    const labelBackEl = document.getElementById('labelBack');
+    const wordFrontEl = document.getElementById('wordFront');
+    const wordBackEl = document.getElementById('wordBack');
+    const exampleFrontEl = document.getElementById('exampleFront');
+    const exampleEl = document.getElementById('example');
+    const seenEl = document.getElementById('seen');
+    const totalEl = document.getElementById('total');
+    const progressFill = document.getElementById('progressFill');
+
+    function getRandomIndex() {
+        if (words.length <= 1) return 0;
+        let idx;
+        do {
+            idx = Math.floor(Math.random() * words.length);
+        } while (idx === currentIndex);
+        return idx;
+    }
+
+    function showWord(index) {
+        const word = words[index];
+        const reversed = Math.random() < 0.5;
+
+        if (reversed) {
+            labelFrontEl.textContent = 'Русский';
+            wordFrontEl.textContent = word.russian;
+            exampleFrontEl.textContent = '';
+            labelBackEl.textContent = 'Srpski';
+            wordBackEl.textContent = word.serbian;
+            exampleEl.textContent = word.example;
+        } else {
+            labelFrontEl.textContent = 'Srpski';
+            wordFrontEl.textContent = word.serbian;
+            exampleFrontEl.textContent = word.example;
+            labelBackEl.textContent = 'Русский';
+            wordBackEl.textContent = word.russian;
+            exampleEl.textContent = '';
+        }
+        currentIndex = index;
+
+        seenSet.add(index);
+        seenEl.textContent = seenSet.size;
+        progressFill.style.width = (seenSet.size / words.length * 100) + '%';
+    }
+
+    function flipCard() {
+        cardEl.classList.toggle('flipped');
+    }
+
+    function nextWord() {
+        if (cardEl.classList.contains('flipped')) {
+            cardEl.classList.remove('flipped');
+            setTimeout(() => {
+                showWord(getRandomIndex());
+            }, 300);
+        } else {
+            showWord(getRandomIndex());
+        }
+    }
+
+    // Init
+    totalEl.textContent = words.length;
+    showWord(getRandomIndex());
+</script>
+
+</body>
+</html>
