@@ -22,6 +22,7 @@
         }
 
         header {
+            position: relative;
             width: 100%;
             padding: 1.2rem 1rem;
             text-align: center;
@@ -240,6 +241,233 @@
                 font-size: 2.4rem;
             }
         }
+
+        /* Edit button in header */
+        .header-edit-btn {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #e0e7ff;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #4338ca;
+            padding: 0.35rem 0.6rem;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+        .header-edit-btn:hover { background: #c7d2fe; }
+
+        /* Overlay */
+        .edit-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .edit-overlay.open { opacity: 1; visibility: visible; }
+
+        /* Slide panel */
+        .edit-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 360px;
+            max-width: 90vw;
+            height: 100vh;
+            background: #fff;
+            z-index: 101;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+        }
+        .edit-panel.open { transform: translateX(0); }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .panel-header h2 { font-size: 1.1rem; font-weight: 600; color: #1e293b; }
+        .panel-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+            line-height: 1;
+        }
+
+        .panel-tools {
+            padding: 0.75rem 1.2rem;
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .search-input {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: #6366f1; }
+        .btn-add {
+            padding: 0.5rem 1rem;
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* Word list */
+        .word-list { flex: 1; overflow-y: auto; padding: 0.5rem 0; }
+        .word-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1.2rem;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s;
+        }
+        .word-item:hover { background: #f8fafc; }
+        .word-item-text {
+            flex: 1;
+            min-width: 0;
+            cursor: pointer;
+        }
+        .word-item-serbian {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .word-item-russian {
+            font-size: 0.8rem;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .word-item-actions { display: flex; gap: 0.3rem; margin-left: 0.5rem; }
+        .btn-icon {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            border-radius: 6px;
+            transition: background 0.15s;
+            color: #64748b;
+        }
+        .btn-icon:hover { background: #f1f5f9; }
+        .btn-icon.delete:hover { background: #fee2e2; color: #dc2626; }
+        .word-count {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            padding: 0.5rem 1.2rem;
+            text-align: center;
+            border-top: 1px solid #f1f5f9;
+        }
+        .panel-footer {
+            padding: 0.75rem 1.2rem;
+            border-top: 1px solid #e2e8f0;
+        }
+        .btn-export {
+            width: 100%;
+            padding: 0.5rem;
+            background: #e0e7ff;
+            color: #4338ca;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Word form modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-overlay.open { display: flex; }
+        .word-form {
+            background: #fff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .word-form h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: #1e293b; }
+        .form-field { margin-bottom: 0.75rem; }
+        .form-field label { display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.25rem; }
+        .form-field input,
+        .form-field textarea {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-field input:focus,
+        .form-field textarea:focus { border-color: #6366f1; }
+        .form-field textarea { resize: vertical; min-height: 60px; }
+        .form-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .btn-save {
+            flex: 1; padding: 0.6rem; background: #6366f1; color: #fff;
+            border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+        }
+        .btn-cancel {
+            flex: 1; padding: 0.6rem; background: #f1f5f9; color: #334155;
+            border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+        }
+
+        /* Confirm dialog */
+        .confirm-dialog {
+            background: #fff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .confirm-dialog p { font-size: 0.95rem; margin-bottom: 1rem; color: #334155; }
+        .confirm-actions { display: flex; gap: 0.5rem; }
+        .btn-confirm-del {
+            flex: 1; padding: 0.6rem; background: #dc2626; color: #fff;
+            border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+        }
+        .btn-confirm-cancel {
+            flex: 1; padding: 0.6rem; background: #f1f5f9; color: #334155;
+            border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -250,6 +478,7 @@
     <div class="progress-bar">
         <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
     </div>
+    <button class="header-edit-btn" onclick="openPanel()" title="Редактирование">&#9998;</button>
 </header>
 
 <main>
@@ -275,14 +504,80 @@
     </div>
 </main>
 
+<!-- Edit overlay + panel -->
+<div class="edit-overlay" id="editOverlay" onclick="closePanel()"></div>
+<div class="edit-panel" id="editPanel">
+    <div class="panel-header">
+        <h2>Редактирование</h2>
+        <button class="panel-close" onclick="closePanel()">&times;</button>
+    </div>
+    <div class="panel-tools">
+        <input type="text" class="search-input" id="searchInput" placeholder="Поиск..." oninput="renderWordList()">
+        <button class="btn-add" onclick="showWordForm('add')">+ Добавить</button>
+    </div>
+    <div class="word-list" id="wordList"></div>
+    <div class="word-count" id="wordCount"></div>
+    <div class="panel-footer">
+        <button class="btn-export" onclick="exportJSON()">Скачать JSON</button>
+    </div>
+</div>
+
+<!-- Word form modal -->
+<div class="modal-overlay" id="wordFormOverlay">
+    <div class="word-form">
+        <h3 id="formTitle">Добавить слово</h3>
+        <div class="form-field">
+            <label>Srpski</label>
+            <input type="text" id="formSerbian">
+        </div>
+        <div class="form-field">
+            <label>Русский</label>
+            <input type="text" id="formRussian">
+        </div>
+        <div class="form-field">
+            <label>Пример</label>
+            <textarea id="formExample"></textarea>
+        </div>
+        <div class="form-actions">
+            <button class="btn-cancel" onclick="hideWordForm()">Отмена</button>
+            <button class="btn-save" onclick="saveWord()">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm delete dialog -->
+<div class="modal-overlay" id="confirmOverlay">
+    <div class="confirm-dialog">
+        <p id="confirmText">Удалить это слово?</p>
+        <div class="confirm-actions">
+            <button class="btn-confirm-cancel" onclick="hideConfirm()">Отмена</button>
+            <button class="btn-confirm-del" id="confirmBtn" onclick="doDelete()">Удалить</button>
+        </div>
+    </div>
+</div>
+
 <footer>Фаза 1 — MVP</footer>
 
 <script src="words.js"></script>
 <script>
-    const words = WORDS_DATA.vocabulary;
+    // --- Storage ---
+    const STORAGE_KEY = 'serbian-words-data';
+    function loadFromStorage() {
+        try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; }
+        catch(e) { return null; }
+    }
+    function saveToStorage() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
+    }
+
+    // --- State ---
+    const words = loadFromStorage() || WORDS_DATA.vocabulary.map(w => ({...w}));
     let seenSet = new Set();
     let currentIndex = -1;
+    let editingIndex = -1;
+    let deleteTargetIndex = -1;
 
+    // --- DOM: card ---
     const cardEl = document.getElementById('card');
     const labelFrontEl = document.getElementById('labelFront');
     const labelBackEl = document.getElementById('labelBack');
@@ -294,19 +589,41 @@
     const totalEl = document.getElementById('total');
     const progressFill = document.getElementById('progressFill');
 
+    // --- DOM: panel ---
+    const editPanel = document.getElementById('editPanel');
+    const editOverlay = document.getElementById('editOverlay');
+    const searchInput = document.getElementById('searchInput');
+    const wordListEl = document.getElementById('wordList');
+    const wordCountEl = document.getElementById('wordCount');
+
+    // --- DOM: form ---
+    const wordFormOverlay = document.getElementById('wordFormOverlay');
+    const formTitle = document.getElementById('formTitle');
+    const formSerbian = document.getElementById('formSerbian');
+    const formRussian = document.getElementById('formRussian');
+    const formExample = document.getElementById('formExample');
+
+    // --- DOM: confirm ---
+    const confirmOverlay = document.getElementById('confirmOverlay');
+
+    // --- Card logic ---
     function getRandomIndex() {
         if (words.length <= 1) return 0;
         let idx;
-        do {
-            idx = Math.floor(Math.random() * words.length);
-        } while (idx === currentIndex);
+        do { idx = Math.floor(Math.random() * words.length); } while (idx === currentIndex);
         return idx;
     }
 
     function showWord(index) {
+        if (words.length === 0) {
+            wordFrontEl.textContent = '—';
+            exampleFrontEl.textContent = 'Словарь пуст';
+            wordBackEl.textContent = '—';
+            exampleEl.textContent = '';
+            return;
+        }
         const word = words[index];
         const reversed = Math.random() < 0.5;
-
         if (reversed) {
             labelFrontEl.textContent = 'Русский';
             wordFrontEl.textContent = word.russian;
@@ -323,28 +640,153 @@
             exampleEl.textContent = '';
         }
         currentIndex = index;
-
         seenSet.add(index);
         seenEl.textContent = seenSet.size;
         progressFill.style.width = (seenSet.size / words.length * 100) + '%';
     }
 
-    function flipCard() {
-        cardEl.classList.toggle('flipped');
-    }
+    function flipCard() { cardEl.classList.toggle('flipped'); }
 
     function nextWord() {
+        if (words.length === 0) return;
         if (cardEl.classList.contains('flipped')) {
             cardEl.classList.remove('flipped');
-            setTimeout(() => {
-                showWord(getRandomIndex());
-            }, 300);
+            setTimeout(() => showWord(getRandomIndex()), 300);
         } else {
             showWord(getRandomIndex());
         }
     }
 
-    // Init
+    function updateTotal() {
+        totalEl.textContent = words.length;
+        seenEl.textContent = seenSet.size;
+        progressFill.style.width = words.length > 0 ? (seenSet.size / words.length * 100) + '%' : '0%';
+    }
+
+    // --- Panel ---
+    function openPanel() {
+        editPanel.classList.add('open');
+        editOverlay.classList.add('open');
+        searchInput.value = '';
+        renderWordList();
+    }
+    function closePanel() {
+        editPanel.classList.remove('open');
+        editOverlay.classList.remove('open');
+    }
+
+    function escapeHtml(str) {
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    function renderWordList() {
+        const filter = searchInput.value.toLowerCase().trim();
+        let html = '';
+        let count = 0;
+        words.forEach((w, i) => {
+            if (filter && !w.serbian.toLowerCase().includes(filter) && !w.russian.toLowerCase().includes(filter)) return;
+            count++;
+            html += '<div class="word-item">'
+                + '<div class="word-item-text" onclick="showWordForm(\'edit\',' + i + ')">'
+                + '<div class="word-item-serbian">' + escapeHtml(w.serbian) + '</div>'
+                + '<div class="word-item-russian">' + escapeHtml(w.russian) + '</div>'
+                + '</div>'
+                + '<div class="word-item-actions">'
+                + '<button class="btn-icon" onclick="showWordForm(\'edit\',' + i + ')" title="Редактировать">&#9998;</button>'
+                + '<button class="btn-icon delete" onclick="confirmDelete(' + i + ')" title="Удалить">&#10005;</button>'
+                + '</div></div>';
+        });
+        wordListEl.innerHTML = html;
+        wordCountEl.textContent = 'Слов: ' + count;
+    }
+
+    // --- Word form ---
+    function showWordForm(mode, index) {
+        editingIndex = (mode === 'edit') ? index : -1;
+        formTitle.textContent = (mode === 'edit') ? 'Редактировать слово' : 'Добавить слово';
+        if (mode === 'edit') {
+            formSerbian.value = words[index].serbian;
+            formRussian.value = words[index].russian;
+            formExample.value = words[index].example;
+        } else {
+            formSerbian.value = '';
+            formRussian.value = '';
+            formExample.value = '';
+        }
+        wordFormOverlay.classList.add('open');
+        formSerbian.focus();
+    }
+    function hideWordForm() {
+        wordFormOverlay.classList.remove('open');
+        editingIndex = -1;
+    }
+    function saveWord() {
+        const serbian = formSerbian.value.trim();
+        const russian = formRussian.value.trim();
+        const example = formExample.value.trim();
+        if (!serbian || !russian) return;
+
+        const wasEditing = editingIndex;
+        if (editingIndex >= 0) {
+            words[editingIndex] = { serbian, russian, example };
+        } else {
+            words.push({ serbian, russian, example });
+        }
+        saveToStorage();
+        updateTotal();
+        renderWordList();
+        hideWordForm();
+        if (wasEditing === currentIndex) showWord(currentIndex);
+    }
+
+    // --- Delete ---
+    function confirmDelete(index) {
+        deleteTargetIndex = index;
+        document.getElementById('confirmText').textContent = 'Удалить «' + words[index].serbian + '»?';
+        confirmOverlay.classList.add('open');
+    }
+    function hideConfirm() {
+        confirmOverlay.classList.remove('open');
+        deleteTargetIndex = -1;
+    }
+    function doDelete() {
+        if (deleteTargetIndex < 0) return;
+        words.splice(deleteTargetIndex, 1);
+        saveToStorage();
+        // fix seenSet indices
+        const newSeen = new Set();
+        seenSet.forEach(i => {
+            if (i < deleteTargetIndex) newSeen.add(i);
+            else if (i > deleteTargetIndex) newSeen.add(i - 1);
+        });
+        seenSet = newSeen;
+        // fix currentIndex
+        if (currentIndex === deleteTargetIndex) {
+            currentIndex = -1;
+            if (words.length > 0) showWord(getRandomIndex());
+        } else if (currentIndex > deleteTargetIndex) {
+            currentIndex--;
+        }
+        updateTotal();
+        renderWordList();
+        hideConfirm();
+    }
+
+    // --- Export ---
+    function exportJSON() {
+        const data = JSON.stringify({ vocabulary: words }, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'words.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // --- Init ---
     totalEl.textContent = words.length;
     showWord(getRandomIndex());
 </script>
