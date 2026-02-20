@@ -468,6 +468,45 @@
             flex: 1; padding: 0.6rem; background: #f1f5f9; color: #334155;
             border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
         }
+
+        /* Deck section in panel */
+        .deck-section {
+            padding: 0.75rem 1.2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .deck-section select {
+            flex: 1;
+            min-width: 0;
+            padding: 0.4rem 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            color: #334155;
+            background: #f8fafc;
+            outline: none;
+            cursor: pointer;
+        }
+        .deck-section select:focus { border-color: #6366f1; }
+        .deck-actions { display: flex; gap: 0.3rem; flex-shrink: 0; }
+        .btn-deck {
+            background: #e0e7ff;
+            border: none;
+            color: #4338ca;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.3rem 0.55rem;
+            border-radius: 8px;
+            transition: background 0.15s;
+            line-height: 1;
+        }
+        .btn-deck:hover { background: #c7d2fe; }
+        .btn-deck.delete { background: #fee2e2; color: #dc2626; }
+        .btn-deck.delete:hover { background: #fecaca; }
     </style>
 </head>
 <body>
@@ -478,6 +517,7 @@
     <div class="progress-bar">
         <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
     </div>
+    <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importJSON(event)">
     <button class="header-edit-btn" onclick="openPanel()" title="Редактирование">&#9998;</button>
 </header>
 
@@ -510,6 +550,14 @@
     <div class="panel-header">
         <h2>Редактирование</h2>
         <button class="panel-close" onclick="closePanel()">&times;</button>
+    </div>
+    <div class="deck-section">
+        <select id="deckSelect" onchange="switchDeck()"></select>
+        <div class="deck-actions">
+            <button class="btn-deck" onclick="showCreateDeckForm()" title="Новый словарь">+</button>
+            <button class="btn-deck" onclick="triggerImport()" title="Импорт JSON">&#8593;</button>
+            <button class="btn-deck delete" onclick="confirmDeleteDeck()" title="Удалить словарь">&#10005;</button>
+        </div>
     </div>
     <div class="panel-tools">
         <input type="text" class="search-input" id="searchInput" placeholder="Поиск..." oninput="renderWordList()">
@@ -556,22 +604,120 @@
     </div>
 </div>
 
+<!-- Create deck modal -->
+<div class="modal-overlay" id="deckFormOverlay">
+    <div class="word-form">
+        <h3>Новый словарь</h3>
+        <div class="form-field">
+            <label>Название</label>
+            <input type="text" id="deckNameInput" placeholder="Например: Еда, Глаголы...">
+        </div>
+        <div class="form-actions">
+            <button class="btn-cancel" onclick="hideCreateDeckForm()">Отмена</button>
+            <button class="btn-save" onclick="createDeck()">Создать</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm delete deck dialog -->
+<div class="modal-overlay" id="confirmDeckOverlay">
+    <div class="confirm-dialog">
+        <p id="confirmDeckText">Удалить этот словарь?</p>
+        <div class="confirm-actions">
+            <button class="btn-confirm-cancel" onclick="hideConfirmDeck()">Отмена</button>
+            <button class="btn-confirm-del" onclick="doDeleteDeck()">Удалить</button>
+        </div>
+    </div>
+</div>
+
 <footer>Фаза 1 — MVP</footer>
 
 <script src="words.js"></script>
 <script>
-    // --- Storage ---
-    const STORAGE_KEY = 'serbian-words-data';
-    function loadFromStorage() {
-        try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; }
-        catch(e) { return null; }
+    // --- Deck Storage ---
+    const DECKS_STORAGE_KEY = 'serbian-decks';
+    const OLD_STORAGE_KEY = 'serbian-words-data';
+    let decks = [];
+    let activeDeckId = 'default';
+    let words = [];
+
+    function generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     }
-    function saveToStorage() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
+
+    function isDecksValid(data) {
+        if (!data || !Array.isArray(data.decks) || data.decks.length === 0) return false;
+        return data.decks.every(d => d.id && d.name && Array.isArray(d.vocabulary));
+    }
+
+    function repairDecks() {
+        // Ensure default deck exists
+        let def = decks.find(d => d.id === 'default');
+        if (!def) {
+            def = { id: 'default', name: 'Мой словарь', vocabulary: WORDS_DATA.vocabulary.map(w => ({...w})) };
+            decks.unshift(def);
+        }
+        // Fix any deck with missing/broken vocabulary
+        decks.forEach(d => {
+            if (!Array.isArray(d.vocabulary)) d.vocabulary = [];
+        });
+        // If default deck is empty, refill from WORDS_DATA
+        if (def.vocabulary.length === 0) {
+            def.vocabulary = WORDS_DATA.vocabulary.map(w => ({...w}));
+        }
+        if (!decks.find(d => d.id === activeDeckId)) {
+            activeDeckId = 'default';
+        }
+    }
+
+    function loadDecks() {
+        try {
+            const stored = localStorage.getItem(DECKS_STORAGE_KEY);
+            if (stored) {
+                const data = JSON.parse(stored);
+                if (isDecksValid(data)) {
+                    decks = data.decks;
+                    activeDeckId = data.activeDeckId || 'default';
+                } else {
+                    // Corrupted — reset
+                    localStorage.removeItem(DECKS_STORAGE_KEY);
+                    return loadDecks();
+                }
+            } else {
+                // Migration: check old storage
+                const old = localStorage.getItem(OLD_STORAGE_KEY);
+                let vocabulary;
+                if (old) {
+                    vocabulary = JSON.parse(old);
+                    if (!Array.isArray(vocabulary) || vocabulary.length === 0) {
+                        vocabulary = WORDS_DATA.vocabulary.map(w => ({...w}));
+                    }
+                } else {
+                    vocabulary = WORDS_DATA.vocabulary.map(w => ({...w}));
+                }
+                decks = [{ id: 'default', name: 'Мой словарь', vocabulary }];
+                activeDeckId = 'default';
+                words = vocabulary;
+                saveDecks();
+                localStorage.removeItem(OLD_STORAGE_KEY);
+            }
+        } catch(e) {
+            decks = [{ id: 'default', name: 'Мой словарь', vocabulary: WORDS_DATA.vocabulary.map(w => ({...w})) }];
+            activeDeckId = 'default';
+        }
+        repairDecks();
+        words = (decks.find(d => d.id === activeDeckId) || decks[0]).vocabulary;
+        saveDecks();
+    }
+
+    function saveDecks() {
+        // Sync current words back into the active deck
+        const deck = decks.find(d => d.id === activeDeckId);
+        if (deck) deck.vocabulary = words;
+        localStorage.setItem(DECKS_STORAGE_KEY, JSON.stringify({ activeDeckId, decks }));
     }
 
     // --- State ---
-    const words = loadFromStorage() || WORDS_DATA.vocabulary.map(w => ({...w}));
     let seenSet = new Set();
     let currentIndex = -1;
     let editingIndex = -1;
@@ -606,6 +752,143 @@
     // --- DOM: confirm ---
     const confirmOverlay = document.getElementById('confirmOverlay');
 
+    // --- DOM: deck ---
+    const deckSelect = document.getElementById('deckSelect');
+    const deckFormOverlay = document.getElementById('deckFormOverlay');
+    const deckNameInput = document.getElementById('deckNameInput');
+    const confirmDeckOverlay = document.getElementById('confirmDeckOverlay');
+
+    // --- Deck management ---
+    function renderDeckSelect() {
+        let html = '';
+        decks.forEach(d => {
+            const selected = d.id === activeDeckId ? ' selected' : '';
+            html += '<option value="' + d.id + '"' + selected + '>' + escapeHtml(d.name) + ' (' + d.vocabulary.length + ')</option>';
+        });
+        deckSelect.innerHTML = html;
+    }
+
+    function switchDeck() {
+        // Save current deck first
+        saveDecks();
+        activeDeckId = deckSelect.value;
+        const deck = decks.find(d => d.id === activeDeckId);
+        words = deck.vocabulary;
+        seenSet = new Set();
+        currentIndex = -1;
+        updateTotal();
+        if (words.length > 0) {
+            showWord(getRandomIndex());
+        } else {
+            showWord(-1);
+        }
+        saveDecks();
+        renderDeckSelect();
+    }
+
+    function showCreateDeckForm() {
+        deckNameInput.value = '';
+        deckFormOverlay.classList.add('open');
+        deckNameInput.focus();
+    }
+    function hideCreateDeckForm() {
+        deckFormOverlay.classList.remove('open');
+    }
+    function createDeck() {
+        const name = deckNameInput.value.trim();
+        if (!name) return;
+        saveDecks();
+        const newDeck = { id: generateId(), name, vocabulary: [] };
+        decks.push(newDeck);
+        activeDeckId = newDeck.id;
+        words = newDeck.vocabulary;
+        seenSet = new Set();
+        currentIndex = -1;
+        saveDecks();
+        renderDeckSelect();
+        updateTotal();
+        showWord(-1);
+        hideCreateDeckForm();
+    }
+
+    // --- Import ---
+    function triggerImport() {
+        document.getElementById('fileInput').click();
+    }
+    function importJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                let vocabulary;
+                if (Array.isArray(data.vocabulary)) {
+                    vocabulary = data.vocabulary;
+                } else if (Array.isArray(data)) {
+                    vocabulary = data;
+                } else {
+                    alert('Неверный формат JSON. Ожидается { "vocabulary": [...] } или массив.');
+                    return;
+                }
+                // Validate entries
+                vocabulary = vocabulary.filter(w => w.serbian && w.russian).map(w => ({
+                    serbian: String(w.serbian),
+                    russian: String(w.russian),
+                    example: String(w.example || '')
+                }));
+                if (vocabulary.length === 0) {
+                    alert('Файл не содержит валидных слов.');
+                    return;
+                }
+                saveDecks();
+                const deckName = file.name.replace(/\.json$/i, '');
+                const newDeck = { id: generateId(), name: deckName, vocabulary };
+                decks.push(newDeck);
+                activeDeckId = newDeck.id;
+                words = newDeck.vocabulary;
+                seenSet = new Set();
+                currentIndex = -1;
+                saveDecks();
+                renderDeckSelect();
+                updateTotal();
+                showWord(getRandomIndex());
+            } catch(err) {
+                alert('Ошибка чтения JSON: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        // Reset file input so same file can be re-imported
+        event.target.value = '';
+    }
+
+    // --- Delete deck ---
+    function confirmDeleteDeck() {
+        if (activeDeckId === 'default') {
+            alert('Нельзя удалить словарь по умолчанию.');
+            return;
+        }
+        const deck = decks.find(d => d.id === activeDeckId);
+        document.getElementById('confirmDeckText').textContent = 'Удалить словарь «' + deck.name + '»?';
+        confirmDeckOverlay.classList.add('open');
+    }
+    function hideConfirmDeck() {
+        confirmDeckOverlay.classList.remove('open');
+    }
+    function doDeleteDeck() {
+        decks = decks.filter(d => d.id !== activeDeckId);
+        activeDeckId = 'default';
+        words = (decks.find(d => d.id === 'default') || decks[0]).vocabulary;
+        seenSet = new Set();
+        currentIndex = -1;
+        saveDecks();
+        renderDeckSelect();
+        updateTotal();
+        if (words.length > 0) showWord(getRandomIndex());
+        else showWord(-1);
+        hideConfirmDeck();
+    }
+
     // --- Card logic ---
     function getRandomIndex() {
         if (words.length <= 1) return 0;
@@ -615,7 +898,7 @@
     }
 
     function showWord(index) {
-        if (words.length === 0) {
+        if (words.length === 0 || index < 0) {
             wordFrontEl.textContent = '—';
             exampleFrontEl.textContent = 'Словарь пуст';
             wordBackEl.textContent = '—';
@@ -734,14 +1017,15 @@
         } else {
             words.push({ serbian, russian, example });
         }
-        saveToStorage();
+        saveDecks();
         updateTotal();
         renderWordList();
+        renderDeckSelect();
         hideWordForm();
         if (wasEditing === currentIndex) showWord(currentIndex);
     }
 
-    // --- Delete ---
+    // --- Delete word ---
     function confirmDelete(index) {
         deleteTargetIndex = index;
         document.getElementById('confirmText').textContent = 'Удалить «' + words[index].serbian + '»?';
@@ -754,7 +1038,7 @@
     function doDelete() {
         if (deleteTargetIndex < 0) return;
         words.splice(deleteTargetIndex, 1);
-        saveToStorage();
+        saveDecks();
         // fix seenSet indices
         const newSeen = new Set();
         seenSet.forEach(i => {
@@ -771,24 +1055,30 @@
         }
         updateTotal();
         renderWordList();
+        renderDeckSelect();
         hideConfirm();
     }
 
     // --- Export ---
     function exportJSON() {
+        const deck = decks.find(d => d.id === activeDeckId);
+        const deckName = deck ? deck.name : 'words';
         const data = JSON.stringify({ vocabulary: words }, null, 2);
         const blob = new Blob([data], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'words.json';
+        a.download = deckName + '.json';
         a.click();
         URL.revokeObjectURL(url);
     }
 
     // --- Init ---
+    loadDecks();
+    renderDeckSelect();
     totalEl.textContent = words.length;
-    showWord(getRandomIndex());
+    if (words.length > 0) showWord(getRandomIndex());
+    else showWord(-1);
 </script>
 
 </body>
